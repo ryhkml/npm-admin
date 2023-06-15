@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+ARG=${1:l}
+
+case $ARG in
+  show)
+    if [ -z $2 ]; then
+      echo "Allowed IP is invalid"
+      exit 1
+    fi
+    if [ -z $3 ]; then
+      echo "Docker container IP is invalid"
+      exit 1
+    fi
+    ufw route allow proto tcp from $2 to $3 port 81
+    # Reload & restart UFW
+    ufw reload
+    systemctl restart ufw
+    echo "Done"
+  ;;
+  delete)
+    text=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
+    if [ -z $text ]; then
+      echo "Nothing to delete"
+      exit
+    fi
+    NUMBERED=$(echo ${text%?})
+    ufw delete $NUMBERED
+    # Reload & restart UFW
+    ufw reload
+    systemctl restart ufw
+    echo "Deleted"
+  ;;
+  *)
+    echo "There was an error"
+    exit 1
+esac

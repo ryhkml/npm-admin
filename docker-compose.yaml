@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  webapp:
+    container_name: reverse-proxy-server
+    hostname: reverse-proxy-server
+    restart: unless-stopped
+    image: jc21/nginx-proxy-manager
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    volumes:
+      - data:/data
+      - letsencrypt:/etc/letsencrypt
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "1"
+          memory: 64M
+    environment:
+      - PUID=1000
+      - PGID=1000
+volumes:
+  data:
+  letsencrypt:
+networks:
+  net:
