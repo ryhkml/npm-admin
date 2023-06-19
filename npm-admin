@@ -4,33 +4,46 @@ set -e
 
 ARG=${1:l}
 
+if [ -z $2 ]; then
+  echo "Invalid argument 2"
+  exit 1
+fi
+
+CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
+
+function restart() {
+  ufw reload
+  systemctl restart ufw
+}
+
 case $ARG in
-  show)
-    if [ -z $2 ]; then
-      echo "Allowed IP is invalid"
-      exit 1
-    fi
-    if [ -z $3 ]; then
-      echo "Docker container IP is invalid"
-      exit 1
-    fi
-    ufw route allow proto tcp from $2 to $3 port 81
+  init)
+    ufw route allow proto tcp from any to $CT_NPM_IP port 80
+    ufw route allow proto tcp from any to $CT_NPM_IP port 443
     # Reload & restart UFW
-    ufw reload
-    systemctl restart ufw
-    echo "Done"
+    restart
+    echo "DONE! ALLOW FWD -> HTTP/HTTPS from Anywhere"
+  ;;
+  show)
+    if [ -z $3 ]; then
+      echo "Invalid argument 3"
+      exit 1
+    fi
+    ufw route allow proto tcp from $3 to $CT_NPM_IP port 81
+    # Reload & restart UFW
+    restart
+    echo "DONE! ALLOW FWD -> Nginx Proxy Manager Admin Panel"
   ;;
   delete)
-    text=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
-    if [ -z $text ]; then
+    status=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
+    if [ -z $status ]; then
       echo "Nothing to delete"
       exit
     fi
-    NUMBERED=$(echo ${text%?})
+    NUMBERED=$(echo ${status%?})
     ufw delete $NUMBERED
     # Reload & restart UFW
-    ufw reload
-    systemctl restart ufw
+    restart
     echo "Deleted"
   ;;
   *)
