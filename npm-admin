@@ -4,13 +4,6 @@ set -e
 
 ARG=${1:l}
 
-if [ -z $2 ]; then
-  echo "Invalid argument 2"
-  exit 1
-fi
-
-CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
-
 function restart() {
   ufw reload
   systemctl restart ufw
@@ -18,6 +11,7 @@ function restart() {
 
 case $ARG in
   init)
+    CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
     ufw route allow proto tcp from any to $CT_NPM_IP port 80
     ufw route allow proto tcp from any to $CT_NPM_IP port 443
     # Reload & restart UFW
@@ -29,6 +23,7 @@ case $ARG in
       echo "Invalid argument 3"
       exit 1
     fi
+    CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
     ufw route allow proto tcp from $3 to $CT_NPM_IP port 81
     # Reload & restart UFW
     restart
@@ -44,7 +39,7 @@ case $ARG in
     ufw delete $NUMBERED
     # Reload & restart UFW
     restart
-    echo "Deleted"
+    echo "DONE!"
   ;;
   *)
     echo "There was an error"
