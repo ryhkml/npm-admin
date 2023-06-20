@@ -8,13 +8,9 @@ You need to fix the Docker and UFW security flaw without disabling iptables. Fol
 sudo cp /etc/ufw/after.rules /etc/ufw/after.rules-COPY
 ```
 ```bash
-sudo curl -o /usr/local/bin/ufw-docker https://raw.githubusercontent.com/chaifeng/ufw-docker/master/ufw-docker
-```
-```bash
-sudo chmod +x /usr/local/bin/ufw-docker
-```
-```bash
-sudo ufw-docker install
+sudo curl -o /usr/local/bin/ufw-docker https://raw.githubusercontent.com/chaifeng/ufw-docker/master/ufw-docker && \
+  sudo chmod +x /usr/local/bin/ufw-docker && \
+  sudo ufw-docker install
 ```
 ```bash
 sudo systemctl restart ufw
@@ -29,15 +25,14 @@ More information, visit: https://github.com/chaifeng/ufw-docker
 Attention, if http and https are listed in the UFW state, delete them. UFW http and https are no longer needed
 
 ```bash
-sudo ufw allow delete http && sudo ufw allow delete https
+sudo ufw allow delete http && \
+  sudo ufw allow delete https
 ```
 then
 
 ```bash
-sudo curl -o /usr/local/bin/npm-admin https://raw.githubusercontent.com/ryhkml/npm-admin/main/npm-admin
-```
-```bash
-sudo chmod +x /usr/local/bin/npm-admin
+sudo curl -o /usr/local/bin/npm-admin https://raw.githubusercontent.com/ryhkml/npm-admin/main/npm-admin && \
+  sudo chmod +x /usr/local/bin/npm-admin
 ```
 ```bash
 sudo npm-admin init <CONTAINER_NPM_NAME|CONTAINER_NPM_ID>
