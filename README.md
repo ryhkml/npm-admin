@@ -10,17 +10,15 @@ sudo cp /etc/ufw/after.rules /etc/ufw/after.rules-COPY
 ```bash
 sudo curl -o /usr/local/bin/ufw-docker https://raw.githubusercontent.com/chaifeng/ufw-docker/master/ufw-docker && \
   sudo chmod +x /usr/local/bin/ufw-docker && \
-  sudo ufw-docker install
-```
-```bash
-sudo systemctl restart ufw
+  sudo ufw-docker install && \
+  sudo systemctl restart ufw
 ```
 
 More information, visit: https://github.com/chaifeng/ufw-docker
 
 ### Usage
 
-#### Show NPM admin panel
+#### Allow NPM admin panel
 
 Attention, if http and https are listed in the UFW state, delete them. UFW http and https are no longer needed
 
@@ -32,17 +30,19 @@ then
 
 ```bash
 sudo curl -o /usr/local/bin/npm-admin https://raw.githubusercontent.com/ryhkml/npm-admin/main/npm-admin && \
-  sudo chmod +x /usr/local/bin/npm-admin
+  sudo chmod +x /usr/local/bin/npm-admin && \
+  sudo npm-admin init
 ```
 ```bash
-sudo npm-admin init <CONTAINER_NPM_NAME|CONTAINER_NPM_ID>
+sudo npm-admin allow
 ```
+or you can specific allow from your public ip or CIDR
 ```bash
-sudo npm-admin show <CONTAINER_NPM_NAME|CONTAINER_NPM_ID> <YOUR_PUBLIC_IP|CIDR|any>
+sudo npm-admin allow <YOUR_PUBLIC_IP|CIDR>
 ```
-`any` or `0.0.0.0/0` means, the NPM admin panel can be access from anywhere
+Default is `any`, the NPM admin panel can be access from anywhere
 
-#### Delete rules NPM admin panel
+#### Delete rule NPM admin panel
 ```bash
 sudo npm-admin delete
 ```

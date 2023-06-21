@@ -4,42 +4,59 @@ set -e
 
 ARG=${1:l}
 
-function restart() {
-  ufw reload
-  systemctl restart ufw
-}
+NAME=$(docker ps --filter ancestor=jc21/nginx-proxy-manager:latest --format '{{.Names}}')
+
+if [ -z $NAME ]; then
+  echo "Container NPM is unavailable"
+  exit 1
+fi
+
+IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $NAME)
 
 case $ARG in
   init)
-    CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
-    ufw route allow proto tcp from any to $CT_NPM_IP port 80
-    ufw route allow proto tcp from any to $CT_NPM_IP port 443
-    # Reload & restart UFW
-    restart
-    echo "DONE! ALLOW FWD -> HTTP/HTTPS from Anywhere"
-  ;;
-  show)
-    if [ -z $3 ]; then
-      echo "Invalid argument 3"
-      exit 1
+    # Reconfigure HTTP and HTTPS connections in
+    http=$(ufw status numbered | grep 80/tcp | awk '{print $2}')
+    if [ $http ]; then
+      n=$(echo ${http%?})
+      echo "y" | ufw delete $n
     fi
-    CT_NPM_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $2)
-    ufw route allow proto tcp from $3 to $CT_NPM_IP port 81
-    # Reload & restart UFW
-    restart
-    echo "DONE! ALLOW FWD -> Nginx Proxy Manager Admin Panel"
+    https=$(ufw status numbered | grep 443/tcp | awk '{print $2}')
+    if [ $https ]; then
+      n=$(echo ${https%?})
+      echo "y" | ufw delete $n
+    fi
+    ufw route allow proto tcp from any to $IP port 80
+    ufw route allow proto tcp from any to $IP port 443
+    # Reload and restart UFW
+    ufw reload
+    systemctl restart ufw
+    echo "DONE! ALLOW FWD -> HTTP and HTTPS from anywhere"
+  ;;
+  allow)
+    if [ -z $2 ]; then
+      # Defaut any
+      ufw route allow proto tcp from any to $IP port 81
+    else
+      ufw route allow proto tcp from $2 to $IP port 81
+    fi
+    # Reload and restart UFW
+    ufw reload
+    systemctl restart ufw
+    echo "DONE! ALLOW FWD -> NPM admin panel"
   ;;
   delete)
-    status=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
-    if [ -z $status ]; then
+    admin=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
+    if [ -z $admin ]; then
       echo "Nothing to delete"
       exit
     fi
-    NUMBERED=$(echo ${status%?})
-    ufw delete $NUMBERED
-    # Reload & restart UFW
-    restart
-    echo "DONE!"
+    n=$(echo ${admin%?})
+    echo "y" | ufw delete $n
+    # Reload and restart UFW
+    ufw reload
+    systemctl restart ufw
+    echo "DONE! Deleted rule NPM admin panel"
   ;;
   *)
     echo "There was an error"
