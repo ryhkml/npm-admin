@@ -8,7 +8,7 @@ You need to fix the Docker and UFW security flaw without disabling iptables. Fol
 sudo cp /etc/ufw/after.rules /etc/ufw/after.rules-COPY
 ```
 ```bash
-sudo curl -o /usr/local/bin/ufw-docker https://raw.githubusercontent.com/chaifeng/ufw-docker/master/ufw-docker && \
+sudo curl -s -o /usr/local/bin/ufw-docker https://raw.githubusercontent.com/chaifeng/ufw-docker/master/ufw-docker && \
   sudo chmod +x /usr/local/bin/ufw-docker && \
   sudo ufw-docker install && \
   sudo systemctl restart ufw
@@ -31,18 +31,24 @@ then
 ```bash
 sudo curl -o /usr/local/bin/npm-admin https://raw.githubusercontent.com/ryhkml/npm-admin/main/npm-admin && \
   sudo chmod +x /usr/local/bin/npm-admin && \
-  sudo npm-admin init
+  sudo npm-admin init && \
+  sudo npm-admin allow
 ```
+or you can specific allow from your subnet/cidr or any
 ```bash
-sudo npm-admin allow
+sudo npm-admin allow <SUBNET_CIDR|any>
 ```
-or you can specific allow from your public ip or CIDR
-```bash
-sudo npm-admin allow <YOUR_PUBLIC_IP|CIDR>
-```
-Default is `any`, the NPM admin panel can be access from anywhere
+Default is your public IP. `any` or `0.0.0.0/0` means, the NPM admin panel can be access from anywhere
 
 #### Delete rule NPM admin panel
 ```bash
 sudo npm-admin delete
+```
+
+### How to update
+
+```bash
+sudo rm -f /usr/local/bin/npm-admin && \
+  sudo curl -s -o /usr/local/bin/npm-admin https://raw.githubusercontent.com/ryhkml/npm-admin/main/npm-admin && \
+  sudo chmod +x /usr/local/bin/npm-admin
 ```

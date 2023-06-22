@@ -35,8 +35,9 @@ case $ARG in
   ;;
   allow)
     if [ -z $2 ]; then
-      # Defaut any
-      ufw route allow proto tcp from any to $IP port 81
+      # Defaut is your public ip
+      connection=$($SSH_CONNECTION | awk '{print $1}')
+      ufw route allow proto tcp from $connection to $IP port 81
     else
       ufw route allow proto tcp from $2 to $IP port 81
     fi
