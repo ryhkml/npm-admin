@@ -14,55 +14,63 @@ fi
 IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $NAME)
 
 case $ARG in
-  init)
-    # Reconfigure HTTP and HTTPS connections in
-    http=$(ufw status numbered | grep 80/tcp | awk '{print $2}')
-    if [ $http ]; then
-      n=$(echo ${http%?})
-      echo "y" | ufw delete $n
-      echo "Y"
-    fi
-    https=$(ufw status numbered | grep 443/tcp | awk '{print $2}')
-    if [ $https ]; then
-      n=$(echo ${https%?})
-      echo "y" | ufw delete $n
-      echo "Y"
-    fi
-    ufw route allow proto tcp from any to $IP port 80
-    ufw route allow proto tcp from any to $IP port 443
-    # Reload and restart UFW
-    ufw reload
-    systemctl restart ufw
-    echo "DONE! ALLOW FWD -> HTTP and HTTPS from anywhere"
-  ;;
-  allow)
-    if [ -z $2 ]; then
-      # Defaut is your public ip
-      connection=$(w -h | awk '{print $3}')
-      ufw route allow proto tcp from $connection to $IP port 81
-    else
-      ufw route allow proto tcp from $2 to $IP port 81
-    fi
-    # Reload and restart UFW
-    ufw reload
-    systemctl restart ufw
-    echo "DONE! ALLOW FWD -> NPM admin panel"
-  ;;
-  delete)
-    admin=$(ufw status numbered | grep 81/tcp | awk '{print $2}')
-    if [ -z $admin ]; then
-      echo "Nothing to delete"
-      exit
-    fi
-    n=$(echo ${admin%?})
-    echo "y" | ufw delete $n
-    echo "Y"
-    # Reload and restart UFW
-    ufw reload
-    systemctl restart ufw
-    echo "DONE! Deleted rule NPM admin panel"
-  ;;
-  *)
-    echo "There was an error"
-  ;;
+    init)
+        # Reconfigure HTTP and HTTPS connections in
+        http=$(ufw status numbered | grep "# Allow HTTP" | awk '{print $2}')
+        if [ $http ]; then
+            n=$(echo ${http%?})
+            echo "y" | ufw delete $n
+            echo "Y"
+        fi
+        https=$(ufw status numbered | grep "# Allow HTTPS" | awk '{print $2}')
+        if [ $https ]; then
+            sleep 1
+            n=$(echo ${https%?})
+            echo "y" | ufw delete $n
+            echo "Y"
+        fi
+        ufw route allow proto tcp from any to $IP port 80 comment "Allow HTTP connections in"
+        sleep 1
+        ufw route allow proto tcp from any to $IP port 443 comment "Allow HTTPS connections in"
+        sleep 1
+        ufw reload
+        sleep 1
+        systemctl restart ufw
+        echo "DONE! ALLOW FWD -> HTTP and HTTPS from anywhere"
+        ;;
+    allow)
+        connection=$(w -h | awk '{print $3}')
+        if [ -z $2 ]; then
+            ufw route allow proto tcp from $connection to $IP port 81 comment "Allow NPM connections in"
+        else
+            ufw route allow proto tcp from $2 to $IP port 81 comment "Allow NPM connections in"
+        fi
+        sleep 1
+        ufw reload
+        sleep 1
+        systemctl restart ufw
+        if [ -z $2 ]; then
+            echo "DONE! ALLOW FWD -> NPM admin panel from $connection"
+        else
+            echo "DONE! ALLOW FWD -> NPM admin panel from $2"
+        fi
+        ;;
+    delete)
+        admin=$(ufw status numbered | grep "# Allow NPM" | awk '{print $2}')
+        if [ -z $admin ]; then
+            echo "Nothing to delete"
+            exit
+        fi
+        n=$(echo ${admin%?})
+        echo "y" | ufw delete $n
+        echo "Y"
+        sleep 1
+        ufw reload
+        sleep 1
+        systemctl restart ufw
+        echo "DONE! Deleted rule NPM admin panel"
+        ;;
+    *)
+        echo "There was an error"
+        ;;
 esac
