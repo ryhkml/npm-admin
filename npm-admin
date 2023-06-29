@@ -16,16 +16,16 @@ IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
 case $ARG in
     init)
         # Reconfigure HTTP and HTTPS connections in
-        http=$(ufw status numbered | grep "# Allow HTTP" | awk '{print $2}')
-        if [ $http ]; then
-            n=$(echo ${http%?})
+        https=$(ufw status numbered | grep "# Allow HTTPS" | awk '{print $2}')
+        if [ $https ]; then
+            n=$(echo ${https%?})
             echo "y" | ufw delete $n
             echo "Y"
         fi
-        https=$(ufw status numbered | grep "# Allow HTTPS" | awk '{print $2}')
-        if [ $https ]; then
+        http=$(ufw status numbered | grep "# Allow HTTP" | awk '{print $2}')
+        if [ $http ]; then
             sleep 1
-            n=$(echo ${https%?})
+            n=$(echo ${http%?})
             echo "y" | ufw delete $n
             echo "Y"
         fi
